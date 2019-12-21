@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const authenticate = require("../authenticate");
+const cors = require("./cors");
 
 const Leaders = require("../models/leaders");
 
@@ -12,13 +13,17 @@ leaderRouter.use(bodyParser.json());
 leaderRouter
   .route("/")
 
-  .all((request, response, next) => {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "text/plain");
-    next();
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
   })
 
-  .get((request, response, next) => {
+  // .all((request, response, next) => {
+  //   response.statusCode = 200;
+  //   response.setHeader("Content-Type", "text/plain");
+  //   next();
+  // })
+
+  .get(cors.cors, (request, response, next) => {
     // response.end("Will send all the leaders to you!");
     Leaders.find({})
       .then(
@@ -33,6 +38,7 @@ leaderRouter
   })
 
   .post(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -52,6 +58,7 @@ leaderRouter
   )
 
   .put(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -61,6 +68,7 @@ leaderRouter
   )
 
   .delete(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -81,13 +89,17 @@ leaderRouter
   .route("/:leaderId")
   // .route("/:leaderId/recipe/:recipeId")
 
-  .all((request, response, next) => {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "text/plain");
-    next();
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
   })
 
-  .get((request, response, next) => {
+  // .all((request, response, next) => {
+  //   response.statusCode = 200;
+  //   response.setHeader("Content-Type", "text/plain");
+  //   next();
+  // })
+
+  .get(cors.cors, (request, response, next) => {
     Leaders.findById(request.params.leaderId)
       .then(
         leader => {
@@ -103,6 +115,7 @@ leaderRouter
   })
 
   .post(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -113,26 +126,32 @@ leaderRouter
     }
   )
 
-  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Leaders.findByIdAndUpdate(
-      req.params.leaderId,
-      {
-        $set: req.body
-      },
-      { new: true }
-    )
-      .then(
-        leader => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json(leader);
+  .put(
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      Leaders.findByIdAndUpdate(
+        req.params.leaderId,
+        {
+          $set: req.body
         },
-        err => next(err)
+        { new: true }
       )
-      .catch(err => next(err));
-  })
+        .then(
+          leader => {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json(leader);
+          },
+          err => next(err)
+        )
+        .catch(err => next(err));
+    }
+  )
 
   .delete(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {

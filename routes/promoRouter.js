@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const authenticate = require("../authenticate");
+const cors = require("./cors");
 
 const Promotions = require("../models/promotions");
 
@@ -12,13 +13,17 @@ promoRouter.use(bodyParser.json());
 promoRouter
   .route("/")
 
-  .all((request, response, next) => {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "text/plain");
-    next();
+  // .all((request, response, next) => {
+  //   response.statusCode = 200;
+  //   response.setHeader("Content-Type", "text/plain");
+  //   next();
+  // })
+
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
   })
 
-  .get((request, response, next) => {
+  .get(cors.cors, (request, response, next) => {
     // response.end("Will send all the Promotions to you!");
     Promotions.find({})
       .then(
@@ -33,6 +38,7 @@ promoRouter
   })
 
   .post(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -52,6 +58,7 @@ promoRouter
   )
 
   .put(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -61,6 +68,7 @@ promoRouter
   )
 
   .delete(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -87,7 +95,11 @@ promoRouter
   //   next();
   // })
 
-  .get((request, response, next) => {
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
+
+  .get(cors.cors, (request, response, next) => {
     Promotions.findById(request.params.promotionId)
       .then(
         promotion => {
@@ -103,6 +115,7 @@ promoRouter
   })
 
   .post(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
@@ -114,26 +127,32 @@ promoRouter
     }
   )
 
-  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Promotions.findByIdAndUpdate(
-      req.params.promotionId,
-      {
-        $set: req.body
-      },
-      { new: true }
-    )
-      .then(
-        promotion => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json(promotion);
+  .put(
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      Promotions.findByIdAndUpdate(
+        req.params.promotionId,
+        {
+          $set: req.body
         },
-        err => next(err)
+        { new: true }
       )
-      .catch(err => next(err));
-  })
+        .then(
+          promotion => {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json(promotion);
+          },
+          err => next(err)
+        )
+        .catch(err => next(err));
+    }
+  )
 
   .delete(
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (request, response, next) => {
